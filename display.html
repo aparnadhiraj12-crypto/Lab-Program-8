@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Submitted Details</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="card">
+  <h1 id="title">Your details</h1>
+  <p class="sub" id="sub"></p>
+  <div id="output"></div>
+  <div class="actions">
+    <a class="btn primary" href="index.html">Edit details</a>
+    <button type="button" class="ghost" id="clearBtn">Delete saved data</button>
+  </div>
+</main>
+
+<script>
+const out = document.getElementById("output");
+const sub = document.getElementById("sub");
+let data = null;
+try { data = JSON.parse(localStorage.getItem("userInfo")); } catch (e) {}
+
+function esc(s) {                       // prevent HTML injection
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function render() {
+  if (!data) {
+    out.innerHTML = "";
+    sub.textContent = "No details saved yet. Fill in the form to see them here.";
+    return;
+  }
+  document.getElementById("title").textContent = "Thanks, " + data.name.split(" ")[0];
+  sub.textContent = "Here is what you submitted.";
+  const rows = [["Name", data.name], ["Gender", data.gender], ["Mobile number", data.mobile],
+                ["Email ID", data.email], ["City", data.city], ["State", data.state], ["Country", data.country]];
+  out.innerHTML = "<dl>" + rows.map(r => `<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("") + "</dl>";
+}
+render();
+
+document.getElementById("clearBtn").addEventListener("click", () => {
+  localStorage.removeItem("userInfo");
+  data = null;
+  document.getElementById("title").textContent = "Your details";
+  render();
+});
+</script>
+</body>
+</html>

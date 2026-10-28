@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>User Information Form</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="card">
+  <h1>Your details</h1>
+  <p class="sub">Fill in the form and we’ll show a summary on the next page.</p>
+
+  <form id="userForm" novalidate>
+    <div class="grid">
+      <div class="full">
+        <label for="name">Full name</label>
+        <input type="text" id="name" name="name" autocomplete="name">
+        <div class="err" id="err-name"></div>
+      </div>
+
+      <fieldset class="full">
+        <legend>Gender</legend>
+        <div class="radios">
+          <label><input type="radio" name="gender" value="Male"> Male</label>
+          <label><input type="radio" name="gender" value="Female"> Female</label>
+          <label><input type="radio" name="gender" value="Other"> Other</label>
+        </div>
+        <div class="err" id="err-gender"></div>
+      </fieldset>
+
+      <div>
+        <label for="mobile">Mobile number</label>
+        <input type="tel" id="mobile" name="mobile" inputmode="numeric" maxlength="10" autocomplete="tel-national" placeholder="10 digits">
+        <div class="err" id="err-mobile"></div>
+      </div>
+
+      <div>
+        <label for="email">Email ID</label>
+        <input type="email" id="email" name="email" autocomplete="email">
+        <div class="err" id="err-email"></div>
+      </div>
+
+      <div>
+        <label for="country">Country</label>
+        <select id="country" name="country"></select>
+        <div class="err" id="err-country"></div>
+      </div>
+
+      <div>
+        <label for="state">State</label>
+        <select id="state" name="state" disabled><option value="">Select a country first</option></select>
+        <div class="err" id="err-state"></div>
+      </div>
+
+      <div class="full">
+        <label for="city">City</label>
+        <input type="text" id="city" name="city" autocomplete="address-level2">
+        <div class="err" id="err-city"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="primary">Save and view details</button>
+      <button type="reset" class="ghost" id="resetBtn">Clear form</button>
+    </div>
+  </form>
+</main>
+
+<script>
+// Country → states data (extend as needed)
+const DATA = {
+  "India": ["Andhra Pradesh","Delhi","Gujarat","Karnataka","Kerala","Maharashtra","Tamil Nadu","Telangana","Uttar Pradesh","West Bengal"],
+  "United States": ["California","Florida","Illinois","New York","Texas","Washington"],
+  "United Kingdom": ["England","Northern Ireland","Scotland","Wales"],
+  "Australia": ["New South Wales","Queensland","Victoria","Western Australia"],
+  "Canada": ["Alberta","British Columbia","Ontario","Quebec"]
+};
+
+const form = document.getElementById("userForm");
+const country = document.getElementById("country");
+const state = document.getElementById("state");
+
+// Fill country list
+country.innerHTML = '<option value="">Select country</option>' +
+  Object.keys(DATA).map(c => `<option>${c}</option>`).join("");
+
+// Fill states when country changes
+function loadStates() {
+  const list = DATA[country.value] || [];
+  state.disabled = !list.length;
+  state.innerHTML = list.length
+    ? '<option value="">Select state</option>' + list.map(s => `<option>${s}</option>`).join("")
+    : '<option value="">Select a country first</option>';
+}
+country.addEventListener("change", loadStates);
+
+function setError(field, msg) {
+  document.getElementById("err-" + field).textContent = msg;
+  const el = document.getElementById(field);
+  if (el) el.classList.toggle("invalid", !!msg);
+}
+
+function validate() {
+  const v = {
+    name: form.name.value.trim(),
+    gender: (form.querySelector('input[name="gender"]:checked') || {}).value || "",
+    mobile: form.mobile.value.trim(),
+    email: form.email.value.trim(),
+    city: form.city.value.trim(),
+    state: form.state.value,
+    country: form.country.value
+  };
+  const errors = {};
+  if (!/^[A-Za-z][A-Za-z .'-]{1,59}$/.test(v.name)) errors.name = "Enter your name using letters only.";
+  if (!v.gender) errors.gender = "Choose one option.";
+  if (!/^[6-9]\d{9}$/.test(v.mobile)) errors.mobile = "Enter a 10-digit number starting with 6, 7, 8 or 9.";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email)) errors.email = "Enter a valid email, like name@example.com.";
+  if (!v.country) errors.country = "Select a country.";
+  if (!v.state) errors.state = "Select a state.";
+  if (!/^[A-Za-z][A-Za-z .'-]{1,49}$/.test(v.city)) errors.city = "Enter your city using letters only.";
+
+  ["name","gender","mobile","email","country","state","city"].forEach(f => setError(f, errors[f] || ""));
+  return { v, ok: Object.keys(errors).length === 0 };
+}
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const { v, ok } = validate();
+  if (!ok) {
+    const first = form.querySelector(".invalid");
+    if (first) first.focus();
+    return;
+  }
+  localStorage.setItem("userInfo", JSON.stringify(v));
+  window.location.href = "display.html";   // go to the display page
+});
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  setTimeout(() => {
+    loadStates();
+    ["name","gender","mobile","email","country","state","city"].forEach(f => setError(f, ""));
+  }, 0);
+});
+</script>
+</body>
+</html>
